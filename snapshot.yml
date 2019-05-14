@@ -1,0 +1,221 @@
+---
+
+- name: Create Main Snapthsot folder
+  hosts: [CLUSTER-BI,CLUSTER-DW,SINGLE,CLUSTER-BI-REPLACE,CLUSTER-DW-ADD-AND-REPLACE]
+  vars_files:
+    - snapshot_vars.yml 
+  user: root
+  any_errors_fatal: true
+
+  tasks:
+    - name: step 1
+      shell: rm -rf /data/Snapshot
+    - name: step 2
+      shell: mkdir /data/Snapshot
+    - name: step 3
+      shell: touch /data/Snapshot/snapshotlog.log
+
+
+- name: Snapshot single node
+  hosts: [SINGLE]
+  vars_files:
+    - snapshot_vars.yml 
+  user: root
+  any_errors_fatal: true
+
+  tasks:
+    - name: step 1
+      shell: mkdir {{snapshot_dir}}/{{item}} | &> /data/Snapshot/snapshotlog.log
+      with_items:
+        - ETL
+        - ACP
+        - Vertica
+        - Config
+        - MSTR
+    - name: ACP Collection
+      shell: "{{item.value}} &> {{snapshot_dir}}/ACP/{{item.key}}.log | &> /data/Snapshot/snapshotlog.log"
+      with_dict: "{{ ACP }}"
+    - name: ACP Collection 2
+      shell: "find {{item}} -name '*.log*' | xargs -d \'\n\' cp -r --backup=t -t /data/Snapshot/ACP/ | &> /data/Snapshot/snapshotlog.log"
+      with_items:
+        - '/usr/'
+        - '/opt/tomcat/logs/'
+        - '/var/'
+        - '/root/'
+        - '/opt/allot/'
+    - name: Config Collection
+      shell: "{{item.value}} &> {{snapshot_dir}}/Config/{{item.key}}.log | &> /data/Snapshot/snapshotlog.log"
+      with_dict: "{{ Config }}"
+    - name: ETL Collection 1
+      shell: "{{item.value}} &> {{snapshot_dir}}/ETL/{{item.key}}.log | &> /data/Snapshot/snapshotlog.log"
+      with_dict: "{{ ETL }}"
+    - name: ETL Collection 2
+      shell: "find {{item}} -name '*.log*' | xargs -d \'\n\' cp -r --backup=t -t /data/Snapshot/ETL/ | &> /data/Snapshot/snapshotlog.log"
+      with_items:
+        - '/opt/allot/clearsee/etl/'
+    - name: MSTR Collection 1
+      shell: "{{item.value}} &> {{snapshot_dir}}/MSTR/{{item.key}}.log"
+      with_dict: "{{ MSTR }}"
+    - name: MSTR Collection 2
+      shell: "find {{item}} -name '*.log*' | xargs -d \'\n\' cp -r --backup=t -t /data/Snapshot/MSTR/ | &> /data/Snapshot/snapshotlog.log"
+      with_items:
+        - '/opt/MicroStrategy/'
+    - name: Vertica Collection 1
+      shell: "{{item.value}} &> {{snapshot_dir}}/Vertica/{{item.key}}.log | &> /data/Snapshot/snapshotlog.log"
+      with_dict: "{{ Vertica }}"
+    - name: Vertica Collection 2
+      shell: "find {{item}} -name '*.log*' | xargs -d \'\n\' cp -r --backup=t -t /data/Snapshot/Vertica/ | &> /data/Snapshot/snapshotlog.log"
+      with_items:
+        - '/opt/vertica/'
+        - '/opt/vertica_catalog/'
+       
+
+
+
+
+- name: Snapshot BI nodes
+  hosts: [CLUSTER-BI,CLUSTER-BI-REPLACE]
+  vars_files:
+    - snapshot_vars.yml 
+  user: root
+  any_errors_fatal: true
+
+  tasks:
+
+    - name: Create subfolder
+      shell: mkdir {{snapshot_dir}}/{{item}} | &> /data/Snapshot/snapshotlog.log
+      with_items:
+        - ETL
+        - ACP
+        - MSTR
+        - Config
+
+    - name: ACP Collection 1
+      shell: "{{item.value}} &> {{snapshot_dir}}/ACP/{{item.key}}.log | &> /data/Snapshot/snapshotlog.log"
+      with_dict: "{{ ACP }}"
+    - name: ACP Collection 2
+      shell: "find {{item}} -name '*.log*' | xargs -d \'\n\' cp -r --backup=t -t /data/Snapshot/ACP/ | &> /data/Snapshot/snapshotlog.log"
+      with_items:
+        - '/usr/'
+        - '/opt/tomcat/logs/'
+        - '/var/'
+        - '/root/'
+        - '/opt/allot/log/'
+        - '/opt/allot/clearsee/install/'
+
+    - name: Config Collection
+      shell: "{{item.value}} &> {{snapshot_dir}}/Config/{{item.key}}.log | &> /data/Snapshot/snapshotlog.log"
+      with_dict: "{{ Config }}"
+
+    - name: ETL Collection 1
+      shell: "{{item.value}} &> {{snapshot_dir}}/ETL/{{item.key}}.log | &> /data/Snapshot/snapshotlog.log"
+      with_dict: "{{ ETL }}"
+    - name: ETL Collection 2
+      shell: "find {{item}} -name '*.log*' | xargs -d \'\n\' cp -r --backup=t -t /data/Snapshot/ETL/ | &> /data/Snapshot/snapshotlog.log"
+      with_items:
+        - '/opt/allot/clearsee/etl/'
+
+    - name: MSTR Collection 1
+      shell: "{{item.value}} &> {{snapshot_dir}}/MSTR/{{item.key}}.log | &> /data/Snapshot/snapshotlog.log"
+      with_dict: "{{ MSTR }}"
+    - name: MSTR Collection 2
+      shell: "find {{item}} -name '*.log*' | xargs -d \'\n\' cp -r --backup=t -t /data/Snapshot/MSTR/ | &> /data/Snapshot/snapshotlog.log"
+      with_items:
+        - '/opt/MicroStrategy/'
+
+
+- name: Snapshot DW nodes
+  hosts: [CLUSTER-DW,CLUSTER-DW-ADD-AND-REPLACE]
+  vars_files:
+    - snapshot_vars.yml 
+  user: root
+  any_errors_fatal: true
+
+  tasks:
+
+    - name: step 1
+      shell: mkdir {{snapshot_dir}}/{{item}} | &> /data/Snapshot/snapshotlog.log
+      with_items:
+        - ETL
+        - ACP
+        - Vertica
+        - Config
+
+    - name: ACP Collection 1
+      shell: "{{item.value}} &> {{snapshot_dir}}/ACP/{{item.key}}.log | &> /data/Snapshot/snapshotlog.log"
+      with_dict: "{{ ACP }}"
+    - name: ACP Collection 2
+      shell: "find {{item}} -name '*.log*' | xargs -d \'\n\' cp -r --backup=t -t /data/Snapshot/ACP/ | &> /data/Snapshot/snapshotlog.log"
+      with_items:
+        - '/usr/'
+        - '/var/'
+        - '/root/'
+        - '/opt/allot/'
+
+    - name: Config Collection
+      shell: "{{item.value}} &> {{snapshot_dir}}/Config/{{item.key}}.log | &> /data/Snapshot/snapshotlog.log"
+      with_dict: "{{ Config }}"
+
+    - name: ETL Collection 1
+      shell: "{{item.value}} &> {{snapshot_dir}}/ETL/{{item.key}}.log"
+      with_dict: "{{ ETL }}"
+    - name: ETL Collection 2
+      shell: "find {{item}} -name '*.log*' | xargs -d \'\n\' cp -r --backup=t -t /data/Snapshot/ETL/ | &> /data/Snapshot/snapshotlog.log"
+      with_items:
+        - '/opt/allot/clearsee/etl/'
+    - name: Vertica Collection 1
+      shell: "{{item.value}} &> {{snapshot_dir}}/Vertica/{{item.key}}.log | &> /data/Snapshot/snapshotlog.log"
+      with_dict: "{{ Vertica }}"
+    - name: Vertica Collection 2
+      shell: "find {{item}} -name '*.log*' | xargs -d \'\n\' cp -r --backup=t -t /data/Snapshot/Vertica/ | &> /data/Snapshot/snapshotlog.log"
+      ignore_errors: yes
+      with_items:
+        - '/opt/vertica/'
+        - '/opt/vertica_catalog/'
+
+       
+
+
+
+- name: Zip Snapshot and clean Working folde
+  hosts: [CLUSTER-BI,CLUSTER-DW,SINGLE,CLUSTER-BI-REPLACE,CLUSTER-DW-ADD-AND-REPLACE]
+  vars_files:
+    - snapshot_vars.yml 
+  user: root
+  any_errors_fatal: true
+
+  tasks:
+    - name: step 1
+      shell: tar cvzf /opt/admin/$(hostname)-Snapshot-$(date +"%d-%m-%Y").tgz /data/Snapshot/ 
+    - name: step 2
+      shell: rm -rf /data/Snapshot/ 
+
+- name: Move zip Snapshot for each node to Primary 
+  hosts: [CLUSTER-BI,CLUSTER-DW,CLUSTER-BI-REPLACE,CLUSTER-DW-ADD-AND-REPLACE]
+  vars_files:
+    - snapshot_vars.yml 
+  user: root
+  any_errors_fatal: true
+
+  tasks:
+    - name: step 1
+      shell: rsync -avz --remove-source-files -e ssh /opt/admin/*Snapshot-* root@clearsee-bi-ipv:/data/ 
+
+- name: Zip all cluster snapshot 
+  hosts: [localhost]
+  vars_files:
+    - snapshot_vars.yml 
+  user: root
+  any_errors_fatal: true
+
+  tasks:
+    - name: step 1
+      shell: cat /etc/ansible/hosts 
+      register: deploy_dir
+
+    - name: step 2
+      shell: tar cvzf /opt/admin/Cluster-Snapshot-$(date +"%d-%m-%Y").tgz /data/*-Snapshot-$(date +"%d-%m-%Y").tgz 
+      when: "'SINGLE' not in deploy_dir.stdout"
+
+    - name: step 3
+      shell: rm -rf /data/*-Snapshot-$(date +"%d-%m-%Y").tgz 

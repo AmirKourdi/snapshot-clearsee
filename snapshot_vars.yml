@@ -1,0 +1,70 @@
+---
+# snapshot vars
+
+snapshot_dir: "/data/Snapshot"
+
+ETL:
+    ETL_modules_status: '/opt/allot/clearsee/python/bin/supervisorctl status'
+
+Config:
+    allottype: '/opt/admin/bin/allottype'
+    clearsee_snmp: '/etc/init.d/clearsee_snmp status'
+    snmpd: '/bin/systemctl status snmpd.service' 
+    ntpd: '/bin/systemctl status ntpd.service'
+    rabbitmq-server: '/etc/init.d/rabbitmq-server status'
+    vertica_agent: '/etc/init.d/vertica_agent status'
+    license_key: "PGPASSWORD=dbadmin /usr/bin/psql -h clearsee-bi-ipv -d central_repository -U dbadmin -c 'select * from etl.license_key;'"
+    license_details: 'echo printls | /opt/allot/clearsee/etl/pymodules/License/LicenseCLI.py'
+    monitor-reports: '/opt/allot/clearsee/etl/admin/monitor.sh -A'
+    whoisprimary: "PGPASSWORD=dbadmin /usr/bin/psql -h clearsee-bi-ipv -d central_repository -U dbadmin -c 'select * from etl.nodes;'"
+    monitor_buckes_state_from_last_hour: "/usr/bin/psql central_repository dbadmin -c 'select original_path, data_source_id, state,count(*) from etl.files where discovery_time >= (now() - interval '1 hours') group by 1,2,3 order by 1,2,3;'"
+    ls-extractworker-folder: 'ls -ltr /data/clearsee_etl/extractworker/'
+    ls-CONV-RT: 'ls -ltr /clearsee_input/CONV_RTU/'
+    postgres_tables_size: "PGPASSWORD=dbadmin /usr/bin/psql -h clearsee-bi-ipv -d central_repository -U dbadmin -c 'SELECT table_schema,table_name FROM information_schema.tables ORDER BY table_schema,table_name;'"
+    patches_status: "echo 'status' | cs_patches"
+    etc_hosts: 'cat /etc/hosts'
+
+
+ACP:
+    tomcat: '/bin/systemctl status tomcat.service'
+    netstat: 'netstat -an'
+    df-h: 'df -h'
+    rabbitmqctl_list_queues: 'rabbitmqctl list_queues'
+    rabbitmqctl_cluster_status: 'rabbitmqctl cluster_status'
+    postgresql_status: '/bin/systemctl status postgresql'
+    time_date: 'date'
+    odbc_driver: 'cat /etc/odbc.ini'
+    check_dmidecode_if_exist: 'dmidecode'
+    networks: 'cat /etc/networks'
+    sysctl-a: 'sysctl -a'
+    localtime: 'cat /etc/localtime '
+    limits-conf: 'cat /etc/security/limits.conf'
+    iptables: 'iptables -L'
+    df-ki: 'df -ki'
+    active-processes: 'ps -aux'
+    ram_usage: 'free -m'
+    pacemaker_resource_status: 'pcs status'
+    drbd_sync: 'cat /proc/drbd'
+    ulimit: 'ulimit -u && ulimit -n' 
+    grub_conf: 'cat /etc/grub'
+
+
+Vertica:
+    vertica_status: "su - dbadmin -c '/opt/vertica/bin/admintools -t view_cluster -x'"
+    verticad: '/etc/init.d/verticad status'
+    vertica_clock: 'cat /etc/profile.d/vertica.sh'
+    vertica_nodes: "/opt/vertica/bin/vsql -U dbadmin -w dbadmin -d clearseedwh -c 'select * from nodes;'"
+    resource_pools: "/opt/vertica/bin/vsql -U dbadmin -w dbadmin -d clearseedwh -c 'select * from resource_pools;'"
+    vertica_users: "/opt/vertica/bin/vsql -U dbadmin -w dbadmin -d clearseedwh -c 'select * from users;'"
+    vertica_top_ram_queries: "/opt/vertica/bin/vsql -U dbadmin -w dbadmin -d clearseedwh -c 'select * from v_monitor.query_requests where memory_acquired_mb > 0 ORDER BY memory_acquired_mb DESC LIMIT 200;'"
+    vertica_tables_size: "/opt/vertica/bin/vsql -U dbadmin -w dbadmin -d clearseedwh -c 'SELECT anchor_table_schema,anchor_table_name,floor(SUM(used_bytes/1024/1024)) AS TABLE_SIZE_MB FROM v_monitor.projection_storage GROUP BY anchor_table_schema,anchor_table_name order by sum(used_bytes) desc;'"
+
+
+MSTR:
+    MSTR_status: '/opt/MicroStrategy/home/bin/mstrctl -s IntelligenceServer get-status' 
+
+
+
+
+
+
